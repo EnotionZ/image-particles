@@ -1,6 +1,6 @@
 (function() {
 
-    var state = window.t = {
+    var state = window.InputTracker = {
         touched: false,
         touchX: 0,
         touchY: 0

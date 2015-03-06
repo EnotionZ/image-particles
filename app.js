@@ -1,5 +1,6 @@
-/*global t*/
 (function() {
+    var t = window.InputTracker;
+
     /**
      * SHADERS
      */
