@@ -226,13 +226,7 @@
         // gl.drawArrays( gl.LINES, 0, numLines );
         // gl.flush();
 
-        // setInterval( drawScene, 1000 / 40 );
         animate();
-    }
-
-    function animate() {
-        requestAnimationFrame(animate);
-        drawScene();
     }
 
 
@@ -304,6 +298,12 @@
         // gl.drawArrays(gl.QUAD_STRIP, 0, numLines);
 
         gl.flush();
+    }
+
+
+    function animate() {
+        drawScene();
+        requestAnimationFrame(animate);
     }
 
     window.onload = loadScene;
