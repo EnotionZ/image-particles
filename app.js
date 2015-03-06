@@ -1,4 +1,4 @@
-(function() {
+var particles = (function() {
     var t = window.InputTracker;
 
     /**
@@ -22,7 +22,7 @@
     precision highp float;\n\
     #endif\n\
     void main(void) {\n\
-    gl_FragColor = vec4(0.4, 0.01, 0.08, 0.5);\n\
+    gl_FragColor = vec4($color);\n\
     }';
 
 
@@ -38,6 +38,26 @@
     })();
 
     var canvas, gl, ratio, vertices, velocities, cw, ch, colorLoc, numLines = 30000;
+    var fragmentShader;
+
+    function setColor(r, g, b, a) {
+        if(!r || !g || !b) {
+            r = 0.4;
+            g = 0.1;
+            b = 0.1;
+        }
+        if(!a) {
+            a = 0.5;
+        }
+        var script = FRAGMENT_SHADER_SCRIPT.replace('$color', [r,g,b,a].join(','));
+        gl.shaderSource(fragmentShader, script);
+        gl.compileShader(fragmentShader);
+        if(!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+            alert("Couldn't compile the fragment shader");
+            gl.deleteShader(fragmentShader);
+            return;
+        }
+    }
 
     /**
      * Initialises WebGL and creates the 3D scene.
@@ -45,14 +65,16 @@
     function loadScene() {
         // Get the canvas element
         canvas = document.getElementById("webGLCanvas");
+
         // Get the WebGL context
         gl = canvas.getContext("experimental-webgl");
+
         // Check whether the WebGL context is available or not
-        // if it's not available exit
         if(!gl) {
             alert("There's no WebGL context available.");
             return;
         }
+
         // Set the viewport to the canvas width and height
         cw = window.innerWidth;
         ch = window.innerHeight;
@@ -74,16 +96,10 @@
         }
 
         // More info about fragment shaders: http://en.wikipedia.org/wiki/Fragment_shader
-        var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-        gl.shaderSource(fragmentShader, FRAGMENT_SHADER_SCRIPT);
-        gl.compileShader(fragmentShader);
-        if(!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
-            alert("Couldn't compile the fragment shader");
-            gl.deleteShader(fragmentShader);
-            return;
-        }
+        fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+        setColor();
 
-        //    Create a shader program.
+        // Create a shader program.
         gl.program = gl.createProgram();
         gl.attachShader(gl.program, vertexShader);
         gl.attachShader(gl.program, fragmentShader);
@@ -95,10 +111,13 @@
             gl.deleteProgram(fragmentShader);
             return;
         }
+
         // Install the program as part of the current rendering state
         gl.useProgram(gl.program);
+
         // Get the vertexPosition attribute from the linked shader program
         var vertexPosition = gl.getAttribLocation(gl.program, "vertexPosition");
+
         // Enable the vertexPosition vertex attribute array. If enabled, the array
         // will be accessed an used for rendering when calls are made to commands like
         // gl.drawArrays, gl.drawElements, etc.
@@ -106,9 +125,11 @@
 
         // Clear the color buffer (r, g, b, a) with the specified color
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
+
         // Clear the depth buffer. The value specified is clamped to the range [0,1].
         // More info about depth buffers: http://en.wikipedia.org/wiki/Depth_buffer
         gl.clearDepth(1.0);
+
         // Enable depth testing. This is a technique used for hidden surface removal.
         // It assigns a value (z) to each pixel that represents the distance from this
         // pixel to the viewer. When another pixel is drawn at the same location the z
@@ -117,6 +138,7 @@
         gl.enable(gl.BLEND);
         gl.disable(gl.DEPTH_TEST);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+
         // Specify which function to use for depth buffer comparisons. It compares the
         // value of the incoming pixel against the one stored in the depth buffer.
         // Possible values are (from the OpenGL documentation):
@@ -133,14 +155,17 @@
         // Now create a shape.
         // First create a vertex buffer in which we can store our data.
         var vertexBuffer = gl.createBuffer();
+
         // Bind the buffer object to the ARRAY_BUFFER target.
         gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+
         // Specify the vertex positions (x, y, z)
         vertices = [];
         ratio = cw / ch;
         velocities = [];
         for(var i = 0; i < numLines; i++) {
-            vertices.push( 0, 0, 1.83 );//(Math.random() * 2 - 1)*ratio, Math.random() * 2 - 1, 1.83 );
+            vertices.push(0, 0, 1.83);
+            //vertices.push((Math.random() * 2 - 1)*ratio, Math.random() * 2 - 1, 1.83 );
             velocities.push( (Math.random() * 2 - 1)*0.05, (Math.random() * 2 - 1)*0.05, 0.93 + Math.random()*0.02 );
         }
         vertices = new Float32Array( vertices );
@@ -307,4 +332,9 @@
     }
 
     window.onload = loadScene;
+
+
+    return {
+        setColor: setColor
+    };
 })();
